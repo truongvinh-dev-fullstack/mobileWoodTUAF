@@ -1,0 +1,8 @@
+# Android build outputs
+*.apk
+*.aab
+**/android/app/release/
+
+# Local build/cache folders
+**/build/
+**/.gradle/
