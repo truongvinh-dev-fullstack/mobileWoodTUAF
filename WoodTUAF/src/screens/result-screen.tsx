@@ -52,6 +52,11 @@ export const ResultScreen = ({ route, navigation }) => {
 
     const fetchAPI = async () => {
         setLoading(true);
+        if (objectClass?.toLocaleLowerCase() == 'other') {
+            setListData(null);
+            setLoading(false);
+            return;
+        }
         let responseJson: any[] = [];
         await AsyncStorage.getItem('responseJson', (error, result) => {
             if (result) {
@@ -106,14 +111,17 @@ export const ResultScreen = ({ route, navigation }) => {
             <View style={{ flex: 1, backgroundColor: 'white', }}>
                 <ScrollView style={{ flex: 1 }}>
                     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'flex-start' }}>
-                        <View style={[boolean ? { transform: [{ scaleX: -1 }] } : {}, {
-                            height: CAM_PREVIEW_WIDTH,
-                            width: CAM_PREVIEW_WIDTH,
-                            backgroundColor: 'green',
-                        }]}>
-                            <Image source={path} resizeMode="cover" style={{ height: CAM_PREVIEW_WIDTH, width: CAM_PREVIEW_WIDTH }} />
-                            {/* {!path ? <Image source={{ uri: 'file://' + cacheImagePath + `?t=${Date.now()}` }} resizeMode="cover" style={{height: CAM_PREVIEW_WIDTH, width: CAM_PREVIEW_WIDTH}}/> : <Image source={path} resizeMode="cover" style={{height: CAM_PREVIEW_WIDTH, width: CAM_PREVIEW_WIDTH}}/>} */}
-                        </View>
+                        {path ?
+                            <View style={[boolean ? { transform: [{ scaleX: -1 }] } : {}, {
+                                height: CAM_PREVIEW_WIDTH,
+                                width: CAM_PREVIEW_WIDTH,
+                                backgroundColor: 'green',
+                            }]}>
+                                <Image source={path} resizeMode="cover" style={{ height: CAM_PREVIEW_WIDTH, width: CAM_PREVIEW_WIDTH }} />
+                                {/* {!path ? <Image source={{ uri: 'file://' + cacheImagePath + `?t=${Date.now()}` }} resizeMode="cover" style={{height: CAM_PREVIEW_WIDTH, width: CAM_PREVIEW_WIDTH}}/> : <Image source={path} resizeMode="cover" style={{height: CAM_PREVIEW_WIDTH, width: CAM_PREVIEW_WIDTH}}/>} */}
+                            </View>
+                            : null
+                        }
                     </View>
                     <View style={{ paddingHorizontal: 16, paddingVertical: 16, backgroundColor: 'white', height: '100%', borderTopLeftRadius: 16, borderTopRightRadius: 16, marginTop: -16, zIndex: 30 }}>
                         {!loading ?

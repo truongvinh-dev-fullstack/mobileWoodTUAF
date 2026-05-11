@@ -59,6 +59,14 @@ const labels = require('../../models/class_names_wood.json');
 
 const plugin = VisionCameraProxy.initFrameProcessorPlugin('xyz', {});
 
+const visibleResultCodes = new Set([
+  'BachDanLangSon',
+  'MoTuyenQuang',
+  'Tech',
+  'Thong',
+  'XoanTaDinhHoa',
+]);
+
 export const HomeScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
@@ -242,27 +250,22 @@ export const HomeScreen = () => {
         objectClass,
       }));
       if (countImg.value >= count) {
-        // let imageLink = null
-
-        // if (objectClass != 'Other') {
-        //   const imageKey = labelToImageKey[objectClass]; // imageKey = "BachDanLangSon"
-        //   imageLink = images[imageKey]; // imageLink = require('../images/BachDanLangSon.jpg')
-        // }
+        const objectClassCode = codeName[maxIndex];
+        const isVisibleResult = visibleResultCodes.has(objectClassCode);
 
         // Tìm loài ghép
         let dataLoaiNghep: any[] = [];
-        let _codeName: string = codeName[maxIndex];
-        let findLoaiNghep = loaiGhep.find((i) => i.code == _codeName);
+        let findLoaiNghep = isVisibleResult ? loaiGhep.find((i) => i.code == objectClassCode) : undefined;
         if (findLoaiNghep) {
           const parentId = findLoaiNghep.parentId;
           dataLoaiNghep = loaiGhep.filter(i => i.parentId == parentId);
         }
 
         // Lấy link ảnh
-        const objectClassCode = codeName[maxIndex];  // dùng để lấy ảnh
-        const imageLink = images[objectClassCode as keyof typeof images]; // imageKey = "BachDanLangSon"
+        const resultObjectClass = isVisibleResult ? nameWood.value : 'other';
+        const imageLink = isVisibleResult ? images[objectClassCode as keyof typeof images] : null; // imageKey = "BachDanLangSon"
 
-        goToListResult(nameWood.value, imageLink, false, dataLoaiNghep);
+        goToListResult(resultObjectClass, imageLink, false, dataLoaiNghep);
         countImg.value = 0;
         setCamera(false);
         setCanProcess(false);
@@ -401,21 +404,21 @@ export const HomeScreen = () => {
       objectClass = labels[maxIndex];
 
       const objectClassCode = codeName[maxIndex];  // dùng để lấy ảnh
+      const isVisibleResult = visibleResultCodes.has(objectClassCode);
       console.log("objectClassCode: ", objectClassCode)
-      imageLink = images[objectClassCode as keyof typeof images]; // imageKey = "BachDanLangSon"
+      imageLink = isVisibleResult ? images[objectClassCode as keyof typeof images] : null; // imageKey = "BachDanLangSon"
       console.log("imageLink: ", imageLink)
 
 
       // Tìm loài ghép
       let dataLoaiNghep: any[] = [];
-      let _codeName: string = codeName[maxIndex];
-      let findLoaiNghep = loaiGhep.find((i) => i.code == _codeName);
+      let findLoaiNghep = isVisibleResult ? loaiGhep.find((i) => i.code == objectClassCode) : undefined;
       if (findLoaiNghep) {
         const parentId = findLoaiNghep.parentId;
         dataLoaiNghep = loaiGhep.filter(i => i.parentId == parentId);
       }
       // console.log('Class:', objectClass);
-      goToListResult(objectClass, imageLink, camera, dataLoaiNghep);
+      goToListResult(isVisibleResult ? objectClass : 'other', imageLink, camera, dataLoaiNghep);
 
       // Final state update
       setData(prev => ({
