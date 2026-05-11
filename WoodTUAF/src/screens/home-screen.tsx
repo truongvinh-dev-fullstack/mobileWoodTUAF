@@ -33,6 +33,7 @@ import { styles } from '../styles';
 import { CurvedBottomBar } from 'react-native-curved-bottom-bar';
 // import { AnimalListScreen } from './animal-list-screen';
 import { launchImageLibrary } from 'react-native-image-picker';
+import type { ImageLibraryOptions } from 'react-native-image-picker';
 import NetInfo from '@react-native-community/netinfo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { InferenceSession } from 'onnxruntime-react-native';
@@ -61,6 +62,8 @@ const plugin = VisionCameraProxy.initFrameProcessorPlugin('xyz', {});
 export const HomeScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
+  const navigationAny = navigation as any;
+  const routeParams = route.params as { camera?: boolean } | undefined;
 
   const [data, setData] = useState({
     tfReady: false,
@@ -93,12 +96,13 @@ export const HomeScreen = () => {
   const [canProcess, setCanProcess] = useState(false);  // dùng để đợi 1 khoảng tg mới cho phép xử lý frame
 
   const sessionRef = useRef<InferenceSession | null>(null);
+  const processDelayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const count = 5;
   const countImg = useSharedValue(0);
   const nameWood = useSharedValue("");
 
-  const isProcessing = React.useRef(false);  // dùng để gán mốc xử lý frame
+  const isProcessingFrame = useSharedValue(false);  // dùng để gán mốc xử lý frame trong worklet
 
   useFocusEffect(
     useCallback(() => {
@@ -130,6 +134,10 @@ export const HomeScreen = () => {
         setLoading(false);
         setCamera(false);
         setCanProcess(false);
+        if (processDelayRef.current) {
+          clearTimeout(processDelayRef.current);
+          processDelayRef.current = null;
+        }
 
         // Clear session nếu cần
         sessionRef.current = null;
@@ -140,12 +148,12 @@ export const HomeScreen = () => {
 
   useFocusEffect(
     React.useCallback(() => {
-      if (route?.params?.camera == true) {
+      if (routeParams?.camera == true) {
         onLaunchRealTime();
       } else {
         setCamera(false);
       }
-    }, [route?.params]),
+    }, [routeParams]),
   );
 
   useEffect(() => {
@@ -196,7 +204,7 @@ export const HomeScreen = () => {
 
       console.log("outputTensor: ", outputTensor)
 
-      const tensorArray = Array.from(outputTensor);
+      const tensorArray = Array.from(outputTensor) as number[];
       const maxValue = Math.max(...tensorArray);
       const maxIndex = tensorArray.indexOf(maxValue);
 
@@ -224,7 +232,7 @@ export const HomeScreen = () => {
         if (objectClass == nameWood.value) {
           countImg.value += 1;
         } else {
-          countImg.value == 0;
+          countImg.value = 0;
           nameWood.value = objectClass;
         }
       }
@@ -246,15 +254,16 @@ export const HomeScreen = () => {
         let _codeName: string = codeName[maxIndex];
         let findLoaiNghep = loaiGhep.find((i) => i.code == _codeName);
         if (findLoaiNghep) {
-          dataLoaiNghep = loaiGhep.filter(i => i.parentId == findLoaiNghep.parentId);
+          const parentId = findLoaiNghep.parentId;
+          dataLoaiNghep = loaiGhep.filter(i => i.parentId == parentId);
         }
 
         // Lấy link ảnh
-        objectClassCode = codeName[maxIndex];  // dùng để lấy ảnh
-        imageLink = images[objectClassCode]; // imageKey = "BachDanLangSon"
+        const objectClassCode = codeName[maxIndex];  // dùng để lấy ảnh
+        const imageLink = images[objectClassCode as keyof typeof images]; // imageKey = "BachDanLangSon"
 
         goToListResult(nameWood.value, imageLink, false, dataLoaiNghep);
-        countImg.value == 0;
+        countImg.value = 0;
         setCamera(false);
         setCanProcess(false);
         return;
@@ -278,17 +287,19 @@ export const HomeScreen = () => {
       return; // Nếu chưa được phép, thoát ngay lập tức
     }
 
-    if (isProcessing.current) {
+    if (isProcessingFrame.value) {
       // đang bận, bỏ qua frame này
       return;
     }
-    isProcessing.current = true;
+    isProcessingFrame.value = true;
 
     try {
       const output = plugin.call(frame);
-      myWorkletFunction(output);
+      if (output != null) {
+        myWorkletFunction(output);
+      }
     } finally {
-      isProcessing.current = false;
+      isProcessingFrame.value = false;
     }
   }, [canProcess]);
 
@@ -344,7 +355,7 @@ export const HomeScreen = () => {
       return;
     }
 
-    const options = {
+    const options: ImageLibraryOptions = {
       mediaType: 'photo',
       quality: 1,
       selectionLimit: 1,
@@ -389,9 +400,9 @@ export const HomeScreen = () => {
 
       objectClass = labels[maxIndex];
 
-      objectClassCode = codeName[maxIndex];  // dùng để lấy ảnh
+      const objectClassCode = codeName[maxIndex];  // dùng để lấy ảnh
       console.log("objectClassCode: ", objectClassCode)
-      imageLink = images[objectClassCode]; // imageKey = "BachDanLangSon"
+      imageLink = images[objectClassCode as keyof typeof images]; // imageKey = "BachDanLangSon"
       console.log("imageLink: ", imageLink)
 
 
@@ -400,7 +411,8 @@ export const HomeScreen = () => {
       let _codeName: string = codeName[maxIndex];
       let findLoaiNghep = loaiGhep.find((i) => i.code == _codeName);
       if (findLoaiNghep) {
-        dataLoaiNghep = loaiGhep.filter(i => i.parentId == findLoaiNghep.parentId);
+        const parentId = findLoaiNghep.parentId;
+        dataLoaiNghep = loaiGhep.filter(i => i.parentId == parentId);
       }
       // console.log('Class:', objectClass);
       goToListResult(objectClass, imageLink, camera, dataLoaiNghep);
@@ -422,9 +434,14 @@ export const HomeScreen = () => {
 
   const onLaunchRealTime = () => {
     setCamera(true);
-    setTimeout(() => {
+    setCanProcess(false);
+    if (processDelayRef.current) {
+      clearTimeout(processDelayRef.current);
+    }
+    processDelayRef.current = setTimeout(() => {
       console.log('Đã hết 7 giây, bắt đầu xử lý frame...');
       setCanProcess(true); // Cho phép frame processor chạy
+      processDelayRef.current = null;
     }, 6000);
   };
 
@@ -438,7 +455,7 @@ export const HomeScreen = () => {
     setCamera(false);
     setLoading(false);
 
-    navigation.navigate('Result', {
+    navigationAny.navigate('Result', {
       type: data.type,
       objectClass,
       path,
@@ -532,17 +549,16 @@ export const HomeScreen = () => {
         </View>
       ) : (
         <View style={{ flex: 1 }}>
+          {/* @ts-ignore react-native-curved-bottom-bar marks several runtime-optional props as required */}
           <CurvedBottomBar.Navigator
             type="up"
-            strokeWidth={0.5}
             height={55}
             circleWidth={55}
             bgColor="white"
             initialRouteName="title1"
             screenOptions={{}}
             borderTopLeftRight
-            swipeEnabled={true}
-            renderCircle={({ selectTab, navigate }) => (
+            renderCircle={({ selectTab, navigate }: any) => (
               <LinearGradient
                 colors={['#2da44e', 'green']}
                 style={home2Styles.btnCircleUp}>
@@ -603,7 +619,7 @@ export const HomeScreen = () => {
                         <TouchableOpacity
                           style={{ alignItems: 'center' }}
                           onPress={
-                            () => { navigation.navigate('Guide') }
+                            () => { navigationAny.navigate('Guide') }
                             // this.props.navigation.navigate('Home3')
                           }>
                           <LinearGradient
