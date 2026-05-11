@@ -1,0 +1,24 @@
+diff --git a/node_modules/onnxruntime-react-native/android/build.gradle b/node_modules/onnxruntime-react-native/android/build.gradle
+index 41b4359..f888ddd 100644
+--- a/node_modules/onnxruntime-react-native/android/build.gradle
++++ b/node_modules/onnxruntime-react-native/android/build.gradle
+@@ -89,13 +89,17 @@ android {
+             "-DORT_EXTENSIONS_ENABLED=${ortExtensionsEnabled}",
+             "-DREACT_NATIVE_VERSION=${REACT_NATIVE_VERSION}",
+             "-DUSE_QNN=${useQnn}",
+-            "-DUSE_NNAPI=${!useQnn}"
++            "-DUSE_NNAPI=${!useQnn}",
++            "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON",
++            "-DCMAKE_SHARED_LINKER_FLAGS=-Wl,-z,max-page-size=16384"
+         } else {
+           arguments "-DNODE_MODULES_DIR=${nodeModules}",
+             "-DORT_EXTENSIONS_ENABLED=${ortExtensionsEnabled}",
+             "-DREACT_NATIVE_VERSION=${REACT_NATIVE_VERSION}",
+             "-DUSE_QNN=${useQnn}",
+-            "-DUSE_NNAPI=${!useQnn}"
++            "-DUSE_NNAPI=${!useQnn}",
++            "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON",
++            "-DCMAKE_SHARED_LINKER_FLAGS=-Wl,-z,max-page-size=16384"
+         }
+         abiFilters (*reactNativeArchitectures())
+       }

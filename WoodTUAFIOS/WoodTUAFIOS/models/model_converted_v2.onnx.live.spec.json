@@ -1,0 +1,32 @@
+{
+  "pack": {
+    "type": "tensor_from_image",
+    "image": "image",
+    "transforms": [
+      {
+        "type": "image_to_image",
+        "name": "scale",
+        "width": 260,
+        "height": 347
+      },
+      {
+        "type": "image_to_image",
+        "name": "center_crop",
+        "width": 260,
+        "height": 260
+      },
+      {
+        "type": "image_to_tensor",
+        "name": "rgb_norm",
+        "mean": [0.485, 0.456, 0.406],
+        "std": [0.229, 0.224, 0.225]
+      }
+    ]
+  },
+  "unpack": {
+    "type": "tensor",
+    "dtype": "float",
+    "key": "maxIdx",
+    "valueKey": "confidence"
+  }
+}
