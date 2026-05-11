@@ -1,0 +1,46 @@
+diff --git a/node_modules/onnxruntime-react-native/android/build.gradle b/node_modules/onnxruntime-react-native/android/build.gradle
+index 41b4359..f888ddd 100644
+--- a/node_modules/onnxruntime-react-native/android/build.gradle
++++ b/node_modules/onnxruntime-react-native/android/build.gradle
+@@ -89,13 +89,17 @@ android {
+             "-DORT_EXTENSIONS_ENABLED=${ortExtensionsEnabled}",
+             "-DREACT_NATIVE_VERSION=${REACT_NATIVE_VERSION}",
+             "-DUSE_QNN=${useQnn}",
+-            "-DUSE_NNAPI=${!useQnn}"
++            "-DUSE_NNAPI=${!useQnn}",
++            "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON",
++            "-DCMAKE_SHARED_LINKER_FLAGS=-Wl,-z,max-page-size=16384"
+         } else {
+           arguments "-DNODE_MODULES_DIR=${nodeModules}",
+             "-DORT_EXTENSIONS_ENABLED=${ortExtensionsEnabled}",
+             "-DREACT_NATIVE_VERSION=${REACT_NATIVE_VERSION}",
+             "-DUSE_QNN=${useQnn}",
+-            "-DUSE_NNAPI=${!useQnn}"
++            "-DUSE_NNAPI=${!useQnn}",
++            "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON",
++            "-DCMAKE_SHARED_LINKER_FLAGS=-Wl,-z,max-page-size=16384"
+         }
+         abiFilters (*reactNativeArchitectures())
+       }
+@@ -246,18 +250,18 @@ dependencies {
+   implementation "junit:junit:4.12"
+ 
+   if (useQnn) {
+-    extractLibs "com.microsoft.onnxruntime:onnxruntime-android-qnn:latest.integration@aar"
++    extractLibs "com.microsoft.onnxruntime:onnxruntime-android-qnn:1.24.3@aar"
+   } else {
+-    extractLibs "com.microsoft.onnxruntime:onnxruntime-android:latest.integration@aar"
++    extractLibs "com.microsoft.onnxruntime:onnxruntime-android:1.24.3@aar"
+   }
+ 
+   if (VersionNumber.parse(REACT_NATIVE_VERSION) < VersionNumber.parse("0.71")) {
+     extractLibs "com.facebook.fbjni:fbjni:+:headers"
+     extractLibs "com.facebook.fbjni:fbjni:+"
+   }
+ 
+   // By default it will just include onnxruntime full aar package
+   if (ortExtensionsEnabled) {
+-    implementation "com.microsoft.onnxruntime:onnxruntime-extensions-android:latest.integration@aar"
++    implementation "com.microsoft.onnxruntime:onnxruntime-extensions-android:1.24.3@aar"
+   }
+ }

@@ -22,3 +22,23 @@ index 41b4359..f888ddd 100644
          }
          abiFilters (*reactNativeArchitectures())
        }
+@@ -246,19 +250,19 @@ dependencies {
+   implementation "junit:junit:4.12"
+ 
+   if (useQnn) {
+-    extractLibs "com.microsoft.onnxruntime:onnxruntime-android-qnn:latest.integration@aar"
++    extractLibs "com.microsoft.onnxruntime:onnxruntime-android-qnn:1.24.3@aar"
+   } else {
+-    extractLibs "com.microsoft.onnxruntime:onnxruntime-android:latest.integration@aar"
++    extractLibs "com.microsoft.onnxruntime:onnxruntime-android:1.24.3@aar"
+   }
+ 
+   if (VersionNumber.parse(REACT_NATIVE_VERSION) < VersionNumber.parse("0.71")) {
+@@ -258,7 +262,7 @@ dependencies {
+ 
+   // By default it will just include onnxruntime full aar package
+   if (ortExtensionsEnabled) {
+-    implementation "com.microsoft.onnxruntime:onnxruntime-extensions-android:latest.integration@aar"
++    implementation "com.microsoft.onnxruntime:onnxruntime-extensions-android:1.24.3@aar"
+   }
+ }

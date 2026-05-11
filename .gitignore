@@ -6,3 +6,6 @@
 # Local build/cache folders
 **/build/
 **/.gradle/
+**/node_modules/
+**/*.xcworkspace/xcuserdata/
+**/*.xcodeproj/xcuserdata/

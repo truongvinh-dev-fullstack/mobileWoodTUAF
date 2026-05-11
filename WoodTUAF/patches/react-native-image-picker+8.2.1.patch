@@ -1,0 +1,57 @@
+diff --git a/node_modules/react-native-image-picker/android/src/main/java/com/imagepicker/ImagePickerModuleImpl.java b/node_modules/react-native-image-picker/android/src/main/java/com/imagepicker/ImagePickerModuleImpl.java
+index 56149f1..7d01bd4 100644
+--- a/node_modules/react-native-image-picker/android/src/main/java/com/imagepicker/ImagePickerModuleImpl.java
++++ b/node_modules/react-native-image-picker/android/src/main/java/com/imagepicker/ImagePickerModuleImpl.java
+@@ -161,10 +161,51 @@ public class ImagePickerModuleImpl implements ActivityEventListener {
+             libraryIntent.putExtra(Intent.EXTRA_MIME_TYPES, this.options.restrictMimeTypes);
+         }
+ 
++        if (libraryIntent.resolveActivity(currentActivity.getPackageManager()) == null) {
++            launchLegacyImageLibraryIntent(currentActivity, requestCode, isSingleSelect, isPhoto, isVideo, callback);
++            return;
++        }
++
+         try {
+             currentActivity.startActivityForResult(libraryIntent, requestCode);
+         } catch (ActivityNotFoundException e) {
+-            callback.invoke(getErrorMap(errOthers, e.getMessage()));
++            launchLegacyImageLibraryIntent(currentActivity, requestCode, isSingleSelect, isPhoto, isVideo, callback);
++        }
++    }
++
++    private void launchLegacyImageLibraryIntent(
++            Activity currentActivity,
++            int requestCode,
++            boolean isSingleSelect,
++            boolean isPhoto,
++            boolean isVideo,
++            Callback callback
++    ) {
++        // Fallback for devices where Android Photo Picker (PICK_IMAGES) is unavailable.
++        Intent legacyIntent = new Intent(Intent.ACTION_GET_CONTENT);
++        legacyIntent.addCategory(Intent.CATEGORY_OPENABLE);
++
++        if (isPhoto) {
++            legacyIntent.setType("image/*");
++        } else if (isVideo) {
++            legacyIntent.setType("video/*");
++        } else {
++            legacyIntent.setType("*/*");
++            legacyIntent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"image/*", "video/*"});
++        }
++
++        if (!isSingleSelect) {
++            legacyIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
++        }
++
++        if (this.options.restrictMimeTypes.length > 0) {
++            legacyIntent.putExtra(Intent.EXTRA_MIME_TYPES, this.options.restrictMimeTypes);
++        }
++
++        try {
++            currentActivity.startActivityForResult(Intent.createChooser(legacyIntent, null), requestCode);
++        } catch (ActivityNotFoundException fallbackError) {
++            callback.invoke(getErrorMap(errOthers, fallbackError.getMessage()));
+             this.callback = null;
+         }
+     }
