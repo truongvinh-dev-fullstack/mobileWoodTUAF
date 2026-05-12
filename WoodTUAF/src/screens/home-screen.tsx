@@ -8,8 +8,6 @@
 /* eslint-disable no-undef-init */
 /* eslint-disable react-native/no-inline-styles */
 /* eslint-disable prettier/prettier */
-// @ts-ignore
-import Icon from 'react-native-vector-icons/dist/FontAwesome';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   StyleSheet,
@@ -49,7 +47,6 @@ import { AnimalListScreen } from './animal-list-screen';
 import { Worklets } from 'react-native-worklets-core';
 import { useSharedValue } from 'react-native-reanimated';
 import { codeName, images, labelToImageKey, loaiGhep } from '../data';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { ImageProcessorModule } = NativeModules;
 
@@ -476,7 +473,7 @@ export const HomeScreen = () => {
     let icon = '';
     switch (routeName) {
       case 'title1':
-        icon = 'ios-home-outline';
+        icon = 'home-outline';
         break;
       case 'title2':
         icon = 'albums-outline';
@@ -506,7 +503,7 @@ export const HomeScreen = () => {
   };
 
   return (
-    <SafeAreaView style={home2Styles.container} edges={['top', 'bottom']}>
+    <>
       {loading && (
         <View style={styles.loading}>
           <ActivityIndicator size="large" color="#125fa1" />
@@ -535,14 +532,13 @@ export const HomeScreen = () => {
             </Text> */}
           </View>
           <TouchableOpacity
-            style={styles.btnBackWrapper}
+            style={[styles.btnBackWrapper, { top: 10 }]}
             onPress={() => { setCamera(false), setCanProcess(false) }}>
             <View style={styles.btnBack}>
-              <Icon
-                style={styles.btnBackIcon}
-                name="chevron-left"
-                size={13}
-                color="white"
+              <Ionicons
+                name={'arrow-back-outline'}
+                size={14}
+                color={'white'}
               />
             </View>
           </TouchableOpacity>
@@ -552,12 +548,14 @@ export const HomeScreen = () => {
           {/* @ts-ignore react-native-curved-bottom-bar marks several runtime-optional props as required */}
           <CurvedBottomBar.Navigator
             type="up"
+            {...({ strokeWidth: 0.5 } as any)}
             height={55}
             circleWidth={55}
             bgColor="white"
             initialRouteName="title1"
             screenOptions={{}}
             borderTopLeftRight
+            {...({ swipeEnabled: true } as any)}
             renderCircle={({ selectTab, navigate }: any) => (
               <LinearGradient
                 colors={['#2da44e', 'green']}
@@ -684,7 +682,7 @@ export const HomeScreen = () => {
           </CurvedBottomBar.Navigator>
         </View>
       )}
-    </SafeAreaView>
+    </>
   );
 };
 
@@ -695,7 +693,7 @@ export const home2Styles = StyleSheet.create({
     marginHorizontal: 16,
     padding: 8,
     borderRadius: 8,
-    marginTop: 16,
+    marginTop: 72,
   },
   container: {
     flex: 1,

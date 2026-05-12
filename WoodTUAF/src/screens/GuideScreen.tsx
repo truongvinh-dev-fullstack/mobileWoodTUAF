@@ -6,7 +6,7 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from "react-native";
-import Icon from "react-native-vector-icons/FontAwesome"; // hoặc Ionicons, MaterialIcons tùy bạn
+import Ionicons from "react-native-vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -19,9 +19,9 @@ const GuideScreen = () => {
         {/* Header với nút Back */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Icon
+            <Ionicons
               style={styles.btnBackIcon}
-              name="chevron-left"
+              name="chevron-back-outline"
               size={20}
               color="#333"
             />

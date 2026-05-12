@@ -14,15 +14,13 @@ import {
     ActivityIndicator,
 } from 'react-native';
 import { styles } from "../styles/";
-// @ts-ignore
-import Icon from 'react-native-vector-icons/dist/FontAwesome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 // import {idName, namkh} from "../data"
 import LinearGradient from 'react-native-linear-gradient';
 import { namkh } from '../data';
 import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import RenderHtml from 'react-native-render-html';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const CAM_PREVIEW_WIDTH = Dimensions.get('window').width;
 
@@ -96,7 +94,7 @@ export const ResultScreen = ({ route, navigation }) => {
     // },[])
 
     return (
-        <SafeAreaView style={resultStyles.container} edges={['top', 'bottom']}>
+        <>
             {
                 loading &&
                 <View style={styles.loading}>
@@ -150,27 +148,32 @@ export const ResultScreen = ({ route, navigation }) => {
                         navigation.navigate('Home', { type, camera: false })
                     }}>
                     <View style={styles.btnBack}>
-                        <Icon style={styles.btnBackIcon} name="chevron-left" size={13} color="white" />
+                        <Ionicons
+                            name={'arrow-back-outline'}
+                            size={15}
+                            color={'white'}
+                        />
                     </View>
                 </TouchableOpacity>
                 <View style={{ paddingHorizontal: 32, paddingVertical: 16 }}>
                     <LinearGradient colors={['#2da44e', 'green']} style={{ borderRadius: 32, paddingHorizontal: 16, paddingVertical: 12 }}>
                         <TouchableOpacity style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}
                             onPress={() => { navigation && navigation.navigate('Home', { type, camera: true }) }}>
-                            <Icon style={{ marginRight: 12 }} name="camera" size={24} color="white" />
+                            <Ionicons
+                                name={'camera'}
+                                size={24}
+                                color={'white'}
+                            />
                             <Text style={{ color: 'white', fontSize: 16, fontWeight: '500' }}>Quay ảnh</Text>
                         </TouchableOpacity>
                     </LinearGradient>
                 </View>
             </View>
-        </SafeAreaView>
+        </>
     );
 };
 
 export const resultStyles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
     border: {
         borderWidth: 0.5,
         borderColor: 'black'

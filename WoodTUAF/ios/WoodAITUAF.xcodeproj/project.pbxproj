@@ -802,7 +802,7 @@
 					"\"$(PODS_ROOT)/Headers/Private/React-Core\"",
 				);
 				INFOPLIST_FILE = WoodAITUAF/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Wood TUAF";
+				INFOPLIST_KEY_CFBundleDisplayName = WoodTNU;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -928,7 +928,7 @@
 					"\"$(PODS_ROOT)/Headers/Private/React-Core\"",
 				);
 				INFOPLIST_FILE = WoodAITUAF/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Wood TUAF";
+				INFOPLIST_KEY_CFBundleDisplayName = WoodTNU;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
