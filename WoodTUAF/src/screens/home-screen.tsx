@@ -51,7 +51,7 @@ import { codeName, images, labelToImageKey, loaiGhep } from '../data';
 const { ImageProcessorModule } = NativeModules;
 
 const CAM_PREVIEW_WIDTH = Dimensions.get('window').width;
-const HOME_OPTIONS_TOP_OFFSET = (StatusBarHeight || 0) + 48;
+const HOME_OPTIONS_TOP_OFFSET = (StatusBarHeight || 0) + 24;
 
 const labels = require('../../models/class_names_wood.json');
 
