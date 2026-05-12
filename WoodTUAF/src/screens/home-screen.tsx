@@ -8,8 +8,6 @@
 /* eslint-disable no-undef-init */
 /* eslint-disable react-native/no-inline-styles */
 /* eslint-disable prettier/prettier */
-// @ts-ignore
-import Icon from 'react-native-vector-icons/dist/FontAwesome';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   StyleSheet,
@@ -49,11 +47,11 @@ import { AnimalListScreen } from './animal-list-screen';
 import { Worklets } from 'react-native-worklets-core';
 import { useSharedValue } from 'react-native-reanimated';
 import { codeName, images, labelToImageKey, loaiGhep } from '../data';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { ImageProcessorModule } = NativeModules;
 
 const CAM_PREVIEW_WIDTH = Dimensions.get('window').width;
+const HOME_OPTIONS_TOP_OFFSET = (StatusBarHeight || 0) + 48;
 
 const labels = require('../../models/class_names_wood.json');
 
@@ -87,19 +85,13 @@ export const HomeScreen = () => {
     heightImg: '',
     widthImg: '',
     countImg: 3,
+    zoom: 1.8,
   });
   const [loading, setLoading] = useState(false);
   const [camera, setCamera] = useState(false);
 
 
   const device = useCameraDevice('back');
-  const [zoom, setZoom] = useState<number>(device?.neutralZoom ?? 1);
-
-  const onInitialized = useCallback(() => {
-    // Đặt về zoom 2x ngay sau khi camera đã sẵn sàng
-    setZoom(1.8);
-  }, []);
-
 
   const [canProcess, setCanProcess] = useState(false);  // dùng để đợi 1 khoảng tg mới cho phép xử lý frame
 
@@ -137,6 +129,7 @@ export const HomeScreen = () => {
           heightImg: '',
           widthImg: '',
           countImg: 3,
+          zoom: 1.8,
         });
 
         setLoading(false);
@@ -509,7 +502,7 @@ export const HomeScreen = () => {
   };
 
   return (
-    <SafeAreaView style={home2Styles.container} edges={['top', 'bottom']}>
+    <>
       {loading && (
         <View style={styles.loading}>
           <ActivityIndicator size="large" color="#125fa1" />
@@ -524,37 +517,37 @@ export const HomeScreen = () => {
             isActive={true}
             frameProcessor={frameProcessor}
             video={true}
-            zoom={zoom}
-            resizeMode='contain'
-            enableZoomGesture={true}
-            onInitialized={onInitialized}
+            zoom={data.zoom}
           />
-          <View style={{ flex: 1, flexDirection: 'row', flexWrap: 'wrap' }}>
+          <View style={{ flex: 1, flexDirection: 'row', flexWrap: 'wrap', }}>
             <Text style={styles.cameraText}>Khung ảnh</Text>
             <Text style={[styles.cameraText, styles.textRight]}>480x480</Text>
-            {/* <Text style={styles.cameraText}>Loại cây</Text>
-            <Text style={[styles.cameraText, styles.textRight]}>
+            {/* <Text style={[styles.cameraText, styles.textRight]}>
               {data.objectClass}
+            </Text>
+            <Text style={styles.cameraText}>maxValue</Text>
+            <Text style={[styles.cameraText, styles.textRight]}>
+              {data.confidence}
             </Text> */}
+
           </View>
           <TouchableOpacity
-            style={styles.btnBackWrapper}
+            style={[styles.btnBackWrapper, { top: 10 }]}
             onPress={() => { setCamera(false), setCanProcess(false) }}>
             <View style={styles.btnBack}>
-              <Icon
-                style={styles.btnBackIcon}
-                name="chevron-left"
-                size={13}
-                color="white"
+              <Ionicons
+                name={'arrow-back-outline'}
+                size={14}
+                color={'white'}
               />
             </View>
           </TouchableOpacity>
         </View>
       ) : (
-        <View style={{ flex: 1 }}>
-          {/* @ts-ignore react-native-curved-bottom-bar marks several runtime-optional props as required */}
+        <View style={{ flex: 1, }}>
           <CurvedBottomBar.Navigator
             type="up"
+            {...({ strokeWidth: 0.5, swipeEnabled: true } as any)}
             height={55}
             circleWidth={55}
             bgColor="white"
@@ -580,7 +573,7 @@ export const HomeScreen = () => {
               component={() => (
                 <LinearGradient style={{ flex: 1 }} colors={['green', '#efedeb']}>
                   <ScrollView style={{ flex: 1 }}>
-                    <View style={{ flex: 1, marginTop: StatusBarHeight }}>
+                    <View style={{ flex: 1, marginTop: HOME_OPTIONS_TOP_OFFSET }}>
                       <View
                         style={[
                           home2Styles.card,
@@ -687,7 +680,7 @@ export const HomeScreen = () => {
           </CurvedBottomBar.Navigator>
         </View>
       )}
-    </SafeAreaView>
+    </>
   );
 };
 

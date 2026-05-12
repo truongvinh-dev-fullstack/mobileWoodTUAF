@@ -73,7 +73,7 @@ export const styles = StyleSheet.create({
     cameraContainer: {
         position: 'relative',
         zIndex: 1,
-        top: 0,
+        //top: 0,
         width: '100%',
         height: '100%',
         minHeight: '100%',
@@ -82,6 +82,7 @@ export const styles = StyleSheet.create({
         // justifyContent: 'center',
         // alignItems: 'center',
         flexDirection: 'column',
+        marginTop: 50
     },
     camera: {
         width: width,
@@ -95,7 +96,7 @@ export const styles = StyleSheet.create({
     },
     btnBackWrapper: {
         position: 'absolute',
-        top: StatusBarHeight - 16,
+        top: StatusBarHeight,
         left: 0,
         width: 64,
         height: 64,
