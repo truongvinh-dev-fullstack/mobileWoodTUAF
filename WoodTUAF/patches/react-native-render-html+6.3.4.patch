@@ -1,0 +1,116 @@
+diff --git a/node_modules/react-native-render-html/lib/commonjs/TChildrenRenderer.js b/node_modules/react-native-render-html/lib/commonjs/TChildrenRenderer.js
+index 9d16738..3158fb8 100644
+--- a/node_modules/react-native-render-html/lib/commonjs/TChildrenRenderer.js
++++ b/node_modules/react-native-render-html/lib/commonjs/TChildrenRenderer.js
+@@ -13,17 +13,15 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
+  * A component to render collections of tnodes.
+  * Especially useful when used with {@link useTNodeChildrenProps}.
+  */
+-const TChildrenRenderer = _renderChildren.default.bind(null);
++function TChildrenRenderer(props) {
++  return (0, _renderChildren.default)(props);
++}
+ 
+ const tchildrenRendererDefaultProps = {
+   propsForChildren: {}
+ };
+-/**
+- * @ignore
+- */
+ 
+ exports.tchildrenRendererDefaultProps = tchildrenRendererDefaultProps;
+-TChildrenRenderer.defaultProps = tchildrenRendererDefaultProps;
+ var _default = TChildrenRenderer;
+ exports.default = _default;
+ //# sourceMappingURL=TChildrenRenderer.js.map
+diff --git a/node_modules/react-native-render-html/lib/commonjs/TNodeChildrenRenderer.js b/node_modules/react-native-render-html/lib/commonjs/TNodeChildrenRenderer.js
+index 50b43ca..c36a991 100644
+--- a/node_modules/react-native-render-html/lib/commonjs/TNodeChildrenRenderer.js
++++ b/node_modules/react-native-render-html/lib/commonjs/TNodeChildrenRenderer.js
+@@ -8,8 +8,6 @@ exports.default = void 0;
+ 
+ var _SharedPropsProvider = require("./context/SharedPropsProvider");
+ 
+-var _TChildrenRenderer = require("./TChildrenRenderer");
+-
+ var _renderChildren = _interopRequireDefault(require("./renderChildren"));
+ 
+ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+@@ -78,12 +76,6 @@ function TNodeChildrenRenderer(props) {
+ 
+   return (0, _renderChildren.default)(useTNodeChildrenProps(props));
+ }
+-/**
+- * @ignore
+- */
+-
+-
+-TNodeChildrenRenderer.defaultProps = _TChildrenRenderer.tchildrenRendererDefaultProps;
+ var _default = TNodeChildrenRenderer;
+ exports.default = _default;
+ //# sourceMappingURL=TNodeChildrenRenderer.js.map
+diff --git a/node_modules/react-native-render-html/lib/typescript/TNodeChildrenRenderer.d.ts b/node_modules/react-native-render-html/lib/typescript/TNodeChildrenRenderer.d.ts
+index 7043a9a..42ebe30 100644
+--- a/node_modules/react-native-render-html/lib/typescript/TNodeChildrenRenderer.d.ts
++++ b/node_modules/react-native-render-html/lib/typescript/TNodeChildrenRenderer.d.ts
+@@ -31,7 +31,4 @@ export declare function useTNodeChildrenProps({ tnode, propsForChildren, disable
+  * A component to render all children of a {@link TNode}.
+  */
+ declare function TNodeChildrenRenderer(props: TNodeChildrenRendererProps): ReactElement;
+-declare namespace TNodeChildrenRenderer {
+-    var defaultProps: Pick<TChildrenRendererProps, "propsForChildren">;
+-}
+ export default TNodeChildrenRenderer;
+diff --git a/node_modules/react-native-render-html/src/TChildrenRenderer.tsx b/node_modules/react-native-render-html/src/TChildrenRenderer.tsx
+index 618a592..6082b2b 100644
+--- a/node_modules/react-native-render-html/src/TChildrenRenderer.tsx
++++ b/node_modules/react-native-render-html/src/TChildrenRenderer.tsx
+@@ -1,4 +1,3 @@
+-import { FunctionComponent } from 'react';
+ import { TChildrenRendererProps } from './shared-types';
+ import renderChildren from './renderChildren';
+ 
+@@ -6,8 +5,9 @@ import renderChildren from './renderChildren';
+  * A component to render collections of tnodes.
+  * Especially useful when used with {@link useTNodeChildrenProps}.
+  */
+-const TChildrenRenderer: FunctionComponent<TChildrenRendererProps> =
+-  renderChildren.bind(null);
++function TChildrenRenderer(props: TChildrenRendererProps) {
++  return renderChildren(props);
++}
+ 
+ export const tchildrenRendererDefaultProps: Pick<
+   TChildrenRendererProps,
+@@ -16,9 +16,4 @@ export const tchildrenRendererDefaultProps: Pick<
+   propsForChildren: {}
+ };
+ 
+-/**
+- * @ignore
+- */
+-TChildrenRenderer.defaultProps = tchildrenRendererDefaultProps;
+-
+ export default TChildrenRenderer;
+diff --git a/node_modules/react-native-render-html/src/TNodeChildrenRenderer.tsx b/node_modules/react-native-render-html/src/TNodeChildrenRenderer.tsx
+index bf5aef6..b820de0 100644
+--- a/node_modules/react-native-render-html/src/TNodeChildrenRenderer.tsx
++++ b/node_modules/react-native-render-html/src/TNodeChildrenRenderer.tsx
+@@ -1,7 +1,6 @@
+ import { ReactElement } from 'react';
+ import { TNode } from '@native-html/transient-render-engine';
+ import { useSharedProps } from './context/SharedPropsProvider';
+-import { tchildrenRendererDefaultProps } from './TChildrenRenderer';
+ import {
+   TChildrenRendererProps,
+   TNodeChildrenRendererProps
+@@ -73,9 +72,4 @@ function TNodeChildrenRenderer(
+   return renderChildren(useTNodeChildrenProps(props));
+ }
+ 
+-/**
+- * @ignore
+- */
+-TNodeChildrenRenderer.defaultProps = tchildrenRendererDefaultProps;
+-
+ export default TNodeChildrenRenderer;

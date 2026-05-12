@@ -1,59 +1,49 @@
-/* eslint-disable jsx-quotes */
-/* eslint-disable @typescript-eslint/no-shadow */
-/* eslint-disable react/no-unstable-nested-components */
 /* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable eqeqeq */
-/* eslint-disable no-trailing-spaces */
-/* eslint-disable quotes */
-/* eslint-disable no-undef-init */
 /* eslint-disable react-native/no-inline-styles */
-/* eslint-disable prettier/prettier */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  StyleSheet,
-  TouchableOpacity,
-  View,
-  Text,
-  ScrollView,
-  Image,
   ActivityIndicator,
-  Dimensions,
-  NativeModules,
   Alert,
+  Linking,
+  NativeModules,
   PermissionsAndroid,
   Platform,
-  Linking,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import LinearGradient from 'react-native-linear-gradient';
-// import {idName} from '../data';
-import { styles } from '../styles';
-import { CurvedBottomBar } from 'react-native-curved-bottom-bar';
-// import { AnimalListScreen } from './animal-list-screen';
 import { launchImageLibrary } from 'react-native-image-picker';
 import type { ImageLibraryOptions } from 'react-native-image-picker';
-import NetInfo from '@react-native-community/netinfo';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { InferenceSession } from 'onnxruntime-react-native';
-// import { preprocessImageToTensor } from './imagePreprocess';
-import { Camera, useCameraDevice, useFrameProcessor, VisionCameraProxy } from 'react-native-vision-camera';
+import {
+  Camera,
+  useCameraDevice,
+  useFrameProcessor,
+  VisionCameraProxy,
+} from 'react-native-vision-camera';
 import {
   useFocusEffect,
   useNavigation,
   useRoute,
 } from '@react-navigation/native';
-import { StatusBarHeight } from '../services';
-import { AnimalListScreen } from './animal-list-screen';
-import { Worklets } from 'react-native-worklets-core';
+import { InferenceSession } from 'onnxruntime-react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useSharedValue } from 'react-native-reanimated';
-import { codeName, images, labelToImageKey, loaiGhep } from '../data';
+import { Worklets } from 'react-native-worklets-core';
+import { styles } from '../styles';
+import { StatusBarHeight } from '../services';
+import { codeName, images, loaiGhep, woodVietnameseNames } from '../data';
+import { FeatureGrid } from '../components/FeatureGrid';
+import { MainActionButton } from '../components/MainActionButton';
+import {
+  fetchWoodSpecies,
+  getCachedWoodSpecies,
+} from '../services/wood-library-service';
+import { appendRecognitionHistory } from '../services/recognition-history-service';
 
 const { ImageProcessorModule } = NativeModules;
-
-const CAM_PREVIEW_WIDTH = Dimensions.get('window').width;
-
 const labels = require('../../models/class_names_wood.json');
-
 const plugin = VisionCameraProxy.initFrameProcessorPlugin('xyz', {});
 
 export const HomeScreen = () => {
@@ -68,7 +58,6 @@ export const HomeScreen = () => {
     camera: false,
     models: [],
     fps: 0,
-    // autoRender: false,
     recognitions_temp: null,
     count: 0,
     objectClass: '',
@@ -78,41 +67,29 @@ export const HomeScreen = () => {
     countImg: 3,
   });
   const [loading, setLoading] = useState(false);
+  const [woodLoading, setWoodLoading] = useState(false);
+  const [woodError, setWoodError] = useState('');
   const [camera, setCamera] = useState(false);
-
+  const [canProcess, setCanProcess] = useState(false);
 
   const device = useCameraDevice('back');
   const [zoom, setZoom] = useState<number>(device?.neutralZoom ?? 1);
 
+  const sessionRef = useRef<InferenceSession | null>(null);
+  const processDelayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const countImg = useSharedValue(0);
+  const nameWood = useSharedValue('');
+  const isProcessingFrame = useSharedValue(false);
+
   const onInitialized = useCallback(() => {
-    // Đặt về zoom 2x ngay sau khi camera đã sẵn sàng
     setZoom(1.8);
   }, []);
 
-
-  const [canProcess, setCanProcess] = useState(false);  // dùng để đợi 1 khoảng tg mới cho phép xử lý frame
-
-  const sessionRef = useRef<InferenceSession | null>(null);
-  const processDelayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const count = 5;
-  const countImg = useSharedValue(0);
-  const nameWood = useSharedValue("");
-
-  const isProcessingFrame = useSharedValue(false);  // dùng để gán mốc xử lý frame trong worklet
-
   useFocusEffect(
     useCallback(() => {
-      // On focus: không cần làm gì nếu bạn chỉ muốn dọn khi rời trang
       return () => {
-        // 👇 Clear khi rời khỏi màn hình
-        console.log('Navigating away, clearing data');
-
-        // Reset shared values
         countImg.value = 0;
         nameWood.value = '';
-
-        // Reset state
         setData({
           tfReady: false,
           type: null,
@@ -127,7 +104,6 @@ export const HomeScreen = () => {
           widthImg: '',
           countImg: 3,
         });
-
         setLoading(false);
         setCamera(false);
         setCanProcess(false);
@@ -135,17 +111,14 @@ export const HomeScreen = () => {
           clearTimeout(processDelayRef.current);
           processDelayRef.current = null;
         }
-
-        // Clear session nếu cần
         sessionRef.current = null;
       };
-    }, [])
+    }, []),
   );
 
-
   useFocusEffect(
-    React.useCallback(() => {
-      if (routeParams?.camera == true) {
+    useCallback(() => {
+      if (routeParams?.camera === true) {
         onLaunchRealTime();
       } else {
         setCamera(false);
@@ -155,150 +128,168 @@ export const HomeScreen = () => {
 
   useEffect(() => {
     Camera.requestCameraPermission();
-    // loadModel();
-    fetchData();
+    preloadWoodLibrary();
   }, []);
 
-  // const loadModel = async () => {
-  //   const assetModelPath = 'model_converted_v2.onnx';
-  //   const destPath = `${RNFS.DocumentDirectoryPath}/${assetModelPath}`;
-
-  //   try {
-  //     await RNFS.copyFileAssets(assetModelPath, destPath);
-  //     const session = await InferenceSession.create(`file://${destPath}`);
-  //     console.log('✅ ONNX model loaded');
-  //     sessionRef.current = session;
-  //   } catch (err) {
-  //     console.error('❌ Lỗi tải mô hình:', err);
-  //   }
-  // };
-
-  const fetchData = async () => {
-    // tải dữ liệu gỗ về bộ nhớ máy
-    async function fetchAPI() {
-      NetInfo.fetch().then(async state => {
-        console.log('Connection type: ', state.type);
-        console.log('Is connected: ', state.isConnected);
-        let responseJson = [];
-        if (state.isConnected) {
-          const response = await fetch(
-            'http://tuaf.tringhiatech.vn/wood/index_get?key=9061f27544ec0703a50aa4a13afc63e73683fece',
-          );
-          responseJson = await response.json();
-          await AsyncStorage.setItem(
-            'responseJson',
-            JSON.stringify(responseJson),
-          );
-        }
-      });
+  const preloadWoodLibrary = async () => {
+    setWoodError('');
+    setWoodLoading(true);
+    try {
+      const cached = await getCachedWoodSpecies();
+      if (cached.length) {
+        setWoodLoading(false);
+      }
+      await fetchWoodSpecies();
+    } catch (error) {
+      console.error('preload wood library error:', error);
+      setWoodError('Không tải được thư viện gỗ');
+    } finally {
+      setWoodLoading(false);
     }
-    fetchAPI();
   };
 
+  const buildRelatedSpecies = (maxIndex: number) => {
+    let dataLoaiNghep: any[] = [];
+    const currentCode = codeName[maxIndex];
+    const findLoaiNghep = loaiGhep.find(i => i.code === currentCode);
+    if (findLoaiNghep) {
+      dataLoaiNghep = loaiGhep.filter(
+        i => i.parentId === findLoaiNghep.parentId,
+      );
+    }
+    return dataLoaiNghep;
+  };
+
+  const getSoftmaxConfidencePercent = (values: number[], index: number) => {
+    if (!values.length || index < 0 || index >= values.length) {
+      return undefined;
+    }
+
+    const maxLogit = Math.max(...values);
+    const expValues = values.map(value => Math.exp(value - maxLogit));
+    const expSum = expValues.reduce((sum, value) => sum + value, 0);
+
+    if (!Number.isFinite(expSum) || expSum === 0) {
+      return undefined;
+    }
+
+    return (expValues[index] / expSum) * 100;
+  };
+
+  const goToListResult = (
+    objectClass: string,
+    path: any,
+    boolean: boolean,
+    dataLoaiNghep: any[],
+    inputImageUri?: string,
+    confidence?: number,
+    resultCode?: string,
+  ) => {
+    setCamera(false);
+    setLoading(false);
+
+    appendRecognitionHistory({
+      resultName:
+        woodVietnameseNames[resultCode as keyof typeof woodVietnameseNames] ||
+        objectClass,
+      resultImagePath: path,
+      inputImageUri,
+      confidence,
+      extraInfo: {
+        objectClass,
+        resultCode,
+        ...(dataLoaiNghep?.length ? { relatedSpecies: dataLoaiNghep } : {}),
+      },
+    }).catch(error => console.error('appendRecognitionHistory error:', error));
+
+    navigationAny.navigate('Result', {
+      type: data.type,
+      objectClass,
+      path,
+      boolean,
+      data: dataLoaiNghep,
+      inputImageUri,
+      confidence,
+    });
+
+    setData(prev => ({
+      ...prev,
+      recognitions_temp: null,
+      count: 0,
+      objectClass: '',
+    }));
+  };
 
   const xuLyKetQuaReadModel = async (outputTensor: any) => {
     try {
-
-      console.log("outputTensor: ", outputTensor)
-
       const tensorArray = Array.from(outputTensor) as number[];
       const maxValue = Math.max(...tensorArray);
       const maxIndex = tensorArray.indexOf(maxValue);
+      const objectClass = labels[maxIndex];
+      const confidencePercent = getSoftmaxConfidencePercent(
+        tensorArray,
+        maxIndex,
+      );
 
-      console.log("maxValue: ", maxValue, " maxIndex: ", maxIndex)
-
-      // const outputTensor = output[Object.keys(output)[0]].data as Float32Array;
-
-
-
-      // @ts-ignore
-      let objectClass = '';
-
-      // if (maxValue < valueOther) {
-      //   objectClass = 'Other';
-      // } else {
-      //   objectClass = labels[maxIndex];
-      // }
-      objectClass = labels[maxIndex];
-      console.log("objectClass: ", objectClass);
-
-      if (nameWood.value == "") {
+      if (nameWood.value === '') {
         countImg.value += 1;
         nameWood.value = objectClass;
+      } else if (objectClass === nameWood.value) {
+        countImg.value += 1;
       } else {
-        if (objectClass == nameWood.value) {
-          countImg.value += 1;
-        } else {
-          countImg.value = 0;
-          nameWood.value = objectClass;
-        }
+        countImg.value = 0;
+        nameWood.value = objectClass;
       }
 
       setData(prev => ({
         ...prev,
         objectClass,
       }));
-      if (countImg.value >= count) {
-        // let imageLink = null
 
-        // if (objectClass != 'Other') {
-        //   const imageKey = labelToImageKey[objectClass]; // imageKey = "BachDanLangSon"
-        //   imageLink = images[imageKey]; // imageLink = require('../images/BachDanLangSon.jpg')
-        // }
-
-        // Tìm loài ghép
-        let dataLoaiNghep: any[] = [];
-        let _codeName: string = codeName[maxIndex];
-        let findLoaiNghep = loaiGhep.find((i) => i.code == _codeName);
-        if (findLoaiNghep) {
-          const parentId = findLoaiNghep.parentId;
-          dataLoaiNghep = loaiGhep.filter(i => i.parentId == parentId);
-        }
-
-        // Lấy link ảnh
-        const objectClassCode = codeName[maxIndex];  // dùng để lấy ảnh
-        const imageLink = images[objectClassCode as keyof typeof images]; // imageKey = "BachDanLangSon"
-
-        goToListResult(nameWood.value, imageLink, false, dataLoaiNghep);
+      if (countImg.value >= 5) {
+        const objectClassCode = codeName[maxIndex];
+        const imageLink = images[objectClassCode as keyof typeof images];
+        goToListResult(
+          nameWood.value,
+          imageLink,
+          false,
+          buildRelatedSpecies(maxIndex),
+          undefined,
+          confidencePercent,
+          objectClassCode,
+        );
         countImg.value = 0;
         setCamera(false);
         setCanProcess(false);
-        return;
       }
-
-      // console.log('Class:', objectClass);
     } catch (e) {
-      console.error("Error processing frame base64:", e);
+      console.error('Error processing frame base64:', e);
     }
   };
 
   const myWorkletFunction = Worklets.createRunOnJS(xuLyKetQuaReadModel);
 
-
-  const frameProcessor = useFrameProcessor((frame) => {
-    'worklet';
-    if (plugin == null) {
-      throw new Error("Failed to load Frame Processor Plugin!");
-    }
-    if (!canProcess) {
-      return; // Nếu chưa được phép, thoát ngay lập tức
-    }
-
-    if (isProcessingFrame.value) {
-      // đang bận, bỏ qua frame này
-      return;
-    }
-    isProcessingFrame.value = true;
-
-    try {
-      const output = plugin.call(frame);
-      if (output != null) {
-        myWorkletFunction(output);
+  const frameProcessor = useFrameProcessor(
+    frame => {
+      'worklet';
+      if (plugin == null) {
+        throw new Error('Failed to load Frame Processor Plugin!');
       }
-    } finally {
-      isProcessingFrame.value = false;
-    }
-  }, [canProcess]);
+      if (!canProcess || isProcessingFrame.value) {
+        return;
+      }
+      isProcessingFrame.value = true;
+      try {
+        const output = plugin.call(frame);
+        if (output != null) {
+          myWorkletFunction(output);
+        }
+      } finally {
+        isProcessingFrame.value = false;
+      }
+    },
+    [canProcess],
+  );
 
   const requestPhotoPermissionAndroid = async () => {
     if (Platform.OS !== 'android') {
@@ -334,7 +325,6 @@ export const HomeScreen = () => {
     }
   };
 
-
   const onLaunchImage = async () => {
     const hasPermission = await requestPhotoPermissionAndroid();
     if (!hasPermission) {
@@ -343,10 +333,7 @@ export const HomeScreen = () => {
         'Vui lòng cấp quyền trong Cài đặt để chọn ảnh.',
         [
           { text: 'Đóng', style: 'cancel' },
-          {
-            text: 'Mở cài đặt',
-            onPress: () => Linking.openSettings(),
-          },
+          { text: 'Mở cài đặt', onPress: () => Linking.openSettings() },
         ],
       );
       return;
@@ -360,13 +347,14 @@ export const HomeScreen = () => {
 
     try {
       const response = await launchImageLibrary(options);
-      console.log("response: ", response)
       if (response.didCancel && !response.assets?.length) {
         return;
       }
       if (response.errorCode) {
-        console.error('launchImageLibrary error:', response.errorCode, response.errorMessage);
-        Alert.alert('Không mở được thư viện ảnh', response.errorMessage || 'Vui lòng thử lại.');
+        Alert.alert(
+          'Không mở được thư viện ảnh',
+          response.errorMessage || 'Vui lòng thử lại.',
+        );
         return;
       }
       if (!response.assets?.length || !response.assets[0]?.uri) {
@@ -374,55 +362,42 @@ export const HomeScreen = () => {
         return;
       }
 
-      const imageAsset = response.assets[0];
-      const imageUri = imageAsset.uri;
+      const imageUri = response.assets[0].uri;
       setLoading(true);
-
-      // Gọi Native Module để tiền xử lý ảnh và chạy model ONNX.
-      const outputData: number[] = await ImageProcessorModule.processImageAndRunModel(imageUri);
-      console.log("outputData: ", outputData)
-
-      // `outputData` bây giờ là mảng Float32Array (được trả về dưới dạng Array<number>)
-      // chứa kết quả suy luận từ model ONNX.
-      const outputTensor = new Float32Array(outputData);
-      const tensorArray = Array.from(outputTensor);
+      const outputData: number[] =
+        await ImageProcessorModule.processImageAndRunModel(imageUri);
+      const tensorArray = Array.from(new Float32Array(outputData));
+      console.log('Model output tensor:', tensorArray);
       const maxValue = Math.max(...tensorArray);
       const maxIndex = tensorArray.indexOf(maxValue);
+      const objectClass = labels[maxIndex];
+      const objectClassCode = codeName[maxIndex];
+      const imageLink = images[objectClassCode as keyof typeof images];
+      const confidencePercent = getSoftmaxConfidencePercent(
+        tensorArray,
+        maxIndex,
+      );
 
-      console.log("outputTensor: ", outputTensor);
-      console.log("maxIndex: ", maxIndex);
+      goToListResult(
+        objectClass,
+        imageLink,
+        camera,
+        buildRelatedSpecies(maxIndex),
+        imageUri,
+        confidencePercent,
+        objectClassCode,
+      );
 
-      let objectClass = '';
-      let imageLink = null;
-
-      objectClass = labels[maxIndex];
-
-      const objectClassCode = codeName[maxIndex];  // dùng để lấy ảnh
-      console.log("objectClassCode: ", objectClassCode)
-      imageLink = images[objectClassCode as keyof typeof images]; // imageKey = "BachDanLangSon"
-      console.log("imageLink: ", imageLink)
-
-
-      // Tìm loài ghép
-      let dataLoaiNghep: any[] = [];
-      let _codeName: string = codeName[maxIndex];
-      let findLoaiNghep = loaiGhep.find((i) => i.code == _codeName);
-      if (findLoaiNghep) {
-        const parentId = findLoaiNghep.parentId;
-        dataLoaiNghep = loaiGhep.filter(i => i.parentId == parentId);
-      }
-      // console.log('Class:', objectClass);
-      goToListResult(objectClass, imageLink, camera, dataLoaiNghep);
-
-      // Final state update
       setData(prev => ({
         ...prev,
         objectClass,
-        fps: Math.floor(Math.random() * 101) + 200, // Random FPS 200–300
-        loading: false,
+        fps: Math.floor(Math.random() * 101) + 200,
       }));
     } catch (error) {
-      console.error("Error in launchImageLibrary/native image processing:", error);
+      console.error(
+        'Error in launchImageLibrary/native image processing:',
+        error,
+      );
       Alert.alert('Có lỗi khi chọn ảnh', 'Vui lòng thử lại.');
     } finally {
       setLoading(false);
@@ -436,71 +411,34 @@ export const HomeScreen = () => {
       clearTimeout(processDelayRef.current);
     }
     processDelayRef.current = setTimeout(() => {
-      console.log('Đã hết 7 giây, bắt đầu xử lý frame...');
-      setCanProcess(true); // Cho phép frame processor chạy
+      setCanProcess(true);
       processDelayRef.current = null;
     }, 6000);
   };
 
-  const goToListResult = (
-    objectClass: any,
-    path: any,
-    boolean: any,
-    dataLoaiNghep: any[],
-  ) => {
-    // @ts-ignore
-    setCamera(false);
-    setLoading(false);
-
-    navigationAny.navigate('Result', {
-      type: data.type,
-      objectClass,
-      path,
-      boolean,
-      data: dataLoaiNghep,
-    });
-
-    setData(prev => ({
-      ...prev,
-      recognitions_temp: null,
-      count: 0,
-      objectClass: '',
-    }));
-  };
-
-
-  const _renderIcon = (routeName: string, selectTab: string) => {
-    let icon = '';
-    switch (routeName) {
-      case 'title1':
-        icon = 'home-outline';
-        break;
-      case 'title2':
-        icon = 'albums-outline';
-        break;
-    }
-    return (
-      <Ionicons
-        name={icon}
-        size={24}
-        color={routeName === selectTab ? 'green' : 'black'}
-      />
-    );
-  };
-
-  const renderTabBar = ({ routeName, selectTab, navigate }: any) => {
-    return (
-      <TouchableOpacity
-        onPress={() => navigate(routeName)}
-        style={{
-          flex: 1,
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}>
-        {_renderIcon(routeName, selectTab)}
-      </TouchableOpacity>
-    );
-  };
+  const featureItems = [
+    {
+      title: 'Chọn từ thư viện',
+      iconName: 'images-outline',
+      onPress: onLaunchImage,
+    },
+    {
+      title: 'Quay video',
+      iconName: 'videocam-outline',
+      onPress: onLaunchRealTime,
+    },
+    {
+      title: 'Thư viện gỗ',
+      iconName: 'wood-grain',
+      iconType: 'wood-grain' as const,
+      onPress: () => navigationAny.navigate('WoodLibrary'),
+    },
+    {
+      title: 'Lịch sử nhận diện',
+      iconName: 'document-text-outline',
+      onPress: () => navigationAny.navigate('History'),
+    },
+  ];
 
   return (
     <>
@@ -519,167 +457,86 @@ export const HomeScreen = () => {
             frameProcessor={frameProcessor}
             video={true}
             zoom={zoom}
-            resizeMode='contain'
+            resizeMode="contain"
             enableZoomGesture={true}
             onInitialized={onInitialized}
           />
           <View style={{ flex: 1, flexDirection: 'row', flexWrap: 'wrap' }}>
             <Text style={styles.cameraText}>Khung ảnh</Text>
             <Text style={[styles.cameraText, styles.textRight]}>480x480</Text>
-            {/* <Text style={styles.cameraText}>Loại cây</Text>
-            <Text style={[styles.cameraText, styles.textRight]}>
-              {data.objectClass}
-            </Text> */}
           </View>
           <TouchableOpacity
             style={[styles.btnBackWrapper, { top: 10 }]}
-            onPress={() => { setCamera(false), setCanProcess(false) }}>
+            onPress={() => {
+              setCamera(false);
+              setCanProcess(false);
+            }}>
             <View style={styles.btnBack}>
-              <Ionicons
-                name={'arrow-back-outline'}
-                size={14}
-                color={'white'}
-              />
+              <Ionicons name="arrow-back-outline" size={14} color="white" />
             </View>
           </TouchableOpacity>
         </View>
       ) : (
-        <View style={{ flex: 1 }}>
-          {/* @ts-ignore react-native-curved-bottom-bar marks several runtime-optional props as required */}
-          <CurvedBottomBar.Navigator
-            type="up"
-            {...({ strokeWidth: 0.5 } as any)}
-            height={55}
-            circleWidth={55}
-            bgColor="white"
-            initialRouteName="title1"
-            screenOptions={{}}
-            borderTopLeftRight
-            {...({ swipeEnabled: true } as any)}
-            renderCircle={({ selectTab, navigate }: any) => (
-              <LinearGradient
-                colors={['#2da44e', 'green']}
-                style={home2Styles.btnCircleUp}>
-                <TouchableOpacity
-                  style={{ flex: 1, justifyContent: 'center' }}
-                  onPress={onLaunchRealTime}>
-                  <Ionicons name={'camera-outline'} size={28} color={'white'} />
-                </TouchableOpacity>
-              </LinearGradient>
+        <View style={home2Styles.container}>
+          <ScrollView
+            style={home2Styles.scroll}
+            contentContainerStyle={home2Styles.scrollContent}>
+            <View style={home2Styles.hero}>
+              <Text style={home2Styles.appTitle}>Wood TNU</Text>
+              <Text style={home2Styles.appSubtitle}>
+                Nhận diện mẫu gỗ nhanh và tra cứu thông tin loài gỗ.
+              </Text>
+              <MainActionButton
+                title="Nhận diện ngay"
+                iconName="camera"
+                onPress={onLaunchRealTime}
+              />
+              <TouchableOpacity
+                activeOpacity={0.82}
+                style={home2Styles.guideRow}
+                onPress={() => navigationAny.navigate('Guide')}>
+                <View style={home2Styles.guideLeft}>
+                  <Ionicons
+                    name="help-circle-outline"
+                    size={21}
+                    color="#07923f"
+                  />
+                  <Text style={home2Styles.guideText}>Hướng dẫn sử dụng</Text>
+                </View>
+                <Ionicons
+                  name="chevron-forward-outline"
+                  size={22}
+                  color="#07923f"
+                />
+              </TouchableOpacity>
+            </View>
+
+            <View style={home2Styles.sectionCard}>
+              <FeatureGrid items={featureItems} />
+            </View>
+
+            {(woodLoading || woodError) && (
+              <TouchableOpacity
+                activeOpacity={0.85}
+                style={home2Styles.cacheStatus}
+                onPress={woodError ? preloadWoodLibrary : undefined}>
+                {woodLoading ? (
+                  <ActivityIndicator size="small" color="#07923f" />
+                ) : (
+                  <Ionicons
+                    name="alert-circle-outline"
+                    size={18}
+                    color="#9a5b00"
+                  />
+                )}
+                <Text style={home2Styles.cacheStatusText}>
+                  {woodLoading
+                    ? 'Đang tải thư viện gỗ...'
+                    : `${woodError}. Chạm để thử lại`}
+                </Text>
+              </TouchableOpacity>
             )}
-            tabBar={renderTabBar}>
-            <CurvedBottomBar.Screen
-              options={{ headerShown: false }}
-              name="title1"
-              position="left"
-              component={() => (
-                <LinearGradient style={{ flex: 1 }} colors={['green', '#efedeb']}>
-                  <ScrollView style={{ flex: 1 }}>
-                    <View style={{ flex: 1, marginTop: StatusBarHeight }}>
-                      <View
-                        style={[
-                          home2Styles.card,
-                          {
-                            justifyContent: 'space-around',
-                            paddingVertical: 16,
-                          },
-                        ]}>
-
-                        <TouchableOpacity
-                          style={{ alignItems: 'center' }}
-                          // @ts-ignore
-                          onPress={onLaunchImage}>
-                          <LinearGradient
-                            colors={['#2da44e', 'green']}
-                            style={home2Styles.optionIcon}>
-                            <Ionicons
-                              name={'image'}
-                              size={24}
-                              color={'white'}
-                            />
-                          </LinearGradient>
-                          <Text>Chọn ảnh</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={{ alignItems: 'center' }}
-                          onPress={onLaunchRealTime}>
-                          <LinearGradient
-                            colors={['#2da44e', 'green']}
-                            style={home2Styles.optionIcon}>
-                            <Ionicons
-                              name={'camera'}
-                              size={24}
-                              color={'white'}
-                            />
-                          </LinearGradient>
-                          <Text>Quay ảnh</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={{ alignItems: 'center' }}
-                          onPress={
-                            () => { navigationAny.navigate('Guide') }
-                            // this.props.navigation.navigate('Home3')
-                          }>
-                          <LinearGradient
-                            colors={['#2da44e', 'green']}
-                            style={home2Styles.optionIcon}>
-                            <Ionicons
-                              name={'help-outline'}
-                              size={24}
-                              color={'white'}
-                            />
-                          </LinearGradient>
-                          <Text>Hướng dẫn</Text>
-                        </TouchableOpacity>
-
-                      </View>
-                      {/* <TouchableOpacity
-                        style={[
-                          home2Styles.card,
-                          { justifyContent: 'space-between', flexWrap: 'wrap' },
-                        ]}
-                        // @ts-ignore
-                        onPress={() => {
-                          navigation.navigate('Guid1');
-                        }}>
-                        <View style={{ padding: 8, width: '70%' }}>
-                          <Text
-                            style={{
-                              fontSize: 16,
-                              fontWeight: '500',
-                              marginBottom: 8,
-                            }}>
-                            Hướng dẫn nhận dạng gỗ
-                          </Text>
-                          <Text style={{ fontSize: 12, color: 'gray' }}>
-                            3 mẹo hữu ích để cải thiện độ chính xác của nhận
-                            dạng
-                          </Text>
-                        </View>
-                      </TouchableOpacity> */}
-                      <View>
-                        <Image
-                          source={require('../../assets/images/Logo_no_background.png')}
-                          style={{
-                            width: CAM_PREVIEW_WIDTH,
-                            height: CAM_PREVIEW_WIDTH,
-                            borderRadius: 8,
-                            opacity: 0.6,
-                          }}
-                        />
-                      </View>
-                    </View>
-                  </ScrollView>
-                </LinearGradient>
-              )}
-            />
-            <CurvedBottomBar.Screen
-              options={{ headerShown: false }}
-              name="title2"
-              component={() => <AnimalListScreen />}
-              position="right"
-            />
-          </CurvedBottomBar.Navigator>
+          </ScrollView>
         </View>
       )}
     </>
@@ -687,66 +544,88 @@ export const HomeScreen = () => {
 };
 
 export const home2Styles = StyleSheet.create({
-  card: {
-    flexDirection: 'row',
-    backgroundColor: 'white',
-    marginHorizontal: 16,
-    padding: 8,
-    borderRadius: 8,
-    marginTop: 72,
-  },
   container: {
     flex: 1,
+    backgroundColor: '#fbfdf9',
   },
-  button: {
-    marginVertical: 5,
+  scroll: {
+    flex: 1,
   },
-  bottomBar: {},
-  btnCircleUp: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+  scrollContent: {
+    paddingTop: StatusBarHeight + 24,
+    paddingHorizontal: 16,
+    paddingBottom: 28,
+  },
+  hero: {
+    backgroundColor: 'white',
+    borderRadius: 24,
+    padding: 22,
+    borderWidth: 1,
+    borderColor: '#e4f1e8',
+    shadowColor: '#0b2b16',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 3,
+    marginTop: 10,
+  },
+  appTitle: {
+    color: '#12351f',
+    fontSize: 26,
+    fontWeight: '800',
+    marginBottom: 8,
+  },
+  appSubtitle: {
+    color: '#5f7467',
+    fontSize: 15,
+    lineHeight: 21,
+    marginBottom: 18,
+  },
+  guideRow: {
+    minHeight: 52,
+    marginTop: 16,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'green',
-    bottom: 18,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 1,
+    justifyContent: 'space-between',
   },
-  imgCircle: {
-    width: 30,
-    height: 30,
-    tintColor: 'gray',
-  },
-  img: {
-    width: 30,
-    height: 30,
-  },
-  optionIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 42 / 2,
-    justifyContent: 'center',
+  guideLeft: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
   },
-  // container: {
-  //     alignItems: 'center',
-  //     backgroundColor: '#ffffff',
-  //     flexGrow: 1,
-  //     padding: 20,
-  // },
-  label: {
-    marginBottom: 10,
+  guideText: {
+    marginLeft: 8,
+    color: '#07923f',
+    fontSize: 16,
+    fontWeight: '700',
   },
-  camera: {
-    flexGrow: 1,
-    width: '100%',
+  sectionCard: {
+    marginTop: 18,
+    padding: 14,
+    borderRadius: 24,
+    backgroundColor: 'white',
+    borderWidth: 1,
+    borderColor: '#e4f1e8',
+    shadowColor: '#0b2b16',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.06,
+    shadowRadius: 14,
+    elevation: 2,
+  },
+  cacheStatus: {
+    minHeight: 48,
+    marginTop: 14,
+    paddingHorizontal: 14,
+    borderRadius: 16,
+    backgroundColor: 'white',
+    borderWidth: 1,
+    borderColor: '#e4f1e8',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  cacheStatusText: {
+    flex: 1,
+    marginLeft: 8,
+    color: '#5f7467',
+    fontSize: 13,
   },
 });

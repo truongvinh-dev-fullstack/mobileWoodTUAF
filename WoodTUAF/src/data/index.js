@@ -1,5 +1,4 @@
 /* eslint-disable quotes */
-/* eslint-disable prettier/prettier */
 export const codeName = [
   'BachDanLangSon',
   'BachDanThaiNguyen',
@@ -18,6 +17,25 @@ export const codeName = [
   'XoanTaDinhHoa',
   'Other',
 ];
+
+export const woodVietnameseNames = {
+  BachDanLangSon: 'Bạch đàn (Lạng Sơn)',
+  BachDanThaiNguyen: 'Bạch đàn (Thái Nguyên)',
+  Gao: 'Gáo',
+  Gioi: 'Giổi',
+  KeoLai: 'Keo lai',
+  KeoTaiTuong: 'Keo tai tượng',
+  LatHoa: 'Lát hoa',
+  LimXanh: 'Lim xanh',
+  MoThaiNguyen: 'Mỡ (Thái Nguyên)',
+  MoTuyenQuang: 'Mỡ (Tuyên Quang)',
+  Que: 'Quế',
+  Tech: 'Tếch',
+  Thong: 'Thông',
+  XoanTaDaiTu: 'Xoan ta (Đại Từ)',
+  XoanTaDinhHoa: 'Xoan ta (Định Hóa)',
+  Other: 'Không nhận dạng được',
+};
 
 // export const namkh = [
 //   "Urophylla x grandis (LS)",
@@ -58,28 +76,27 @@ export const codeName = [
 // ];
 
 export const namkh = [
-  "E. urophylla x E. grandis",
-  "Eucalyptus Urophylla",
-  "Nauclea orientalis",
-  "Michelia tonkinensis",
-  "Acacia hybrid",
-  "Acacia mangium",
-  "Chukrasia tabularis",
-  "Erythrophleum fordii",
-  "Manglietia conifera",
-  "Manglietia conifera (TQ)",
-  "Cinnamomum cassia",
-  "Tectona grandis Linn",
-  "Pinus massoniana Lamb",
-  "Melia azedarach",
-  "Melia azedarach Linn",
-  "Other",
+  'E. urophylla x E. grandis',
+  'Eucalyptus Urophylla',
+  'Nauclea orientalis',
+  'Michelia tonkinensis',
+  'Acacia hybrid',
+  'Acacia mangium',
+  'Chukrasia tabularis',
+  'Erythrophleum fordii',
+  'Manglietia conifera',
+  'Manglietia conifera (TQ)',
+  'Cinnamomum cassia',
+  'Tectona grandis Linn',
+  'Pinus massoniana Lamb',
+  'Melia azedarach',
+  'Melia azedarach Linn',
+  'Other',
 ];
 
-
 export const loaiGhep = [
-  { id: 1, name: 'Keo lai', code: 'KeoLai', parentId: 1 },
-  { id: 2, name: 'Keo tai tượng', code: 'KeoTaiTuong', parentId: 1 },
+  {id: 1, name: 'Keo lai', code: 'KeoLai', parentId: 1},
+  {id: 2, name: 'Keo tai tượng', code: 'KeoTaiTuong', parentId: 1},
 ];
 
 export const images = {
@@ -101,23 +118,21 @@ export const images = {
 };
 
 export const labelToImageKey = {
-  "Bạch đàn (Lạng Sơn)": "BachDanLangSon",
-  "Bạch đàn (Thái Nguyên)": "BachDanThaiNguyen",
-  "Giổi": "Gioi",
-  "Gáo": "Gao",
-  "Keo lai": "KeoLai",
-  "Keo tai tượng": "KeoTaiTuong",
-  "Lim xanh": "LimXanh",
-  "Lát hoa": "LatHoa",
-  "Mỡ (Thái Nguyên)": "MoThaiNguyen",
-  "Mỡ (Tuyên Quang)": "MoTuyenQuang",
-  "Quế": "Que",
-  "Thông": "Thong",
-  "Tếch": "Tech",
-  "Xoan ta (Đại Từ)": "XoanTaDaiTu",
-  "Xoan ta (Định Hóa)": "XoanTaDinhHoa"
+  'Bạch đàn (Lạng Sơn)': 'BachDanLangSon',
+  'Bạch đàn (Thái Nguyên)': 'BachDanThaiNguyen',
+  Giổi: 'Gioi',
+  Gáo: 'Gao',
+  'Keo lai': 'KeoLai',
+  'Keo tai tượng': 'KeoTaiTuong',
+  'Lim xanh': 'LimXanh',
+  'Lát hoa': 'LatHoa',
+  'Mỡ (Thái Nguyên)': 'MoThaiNguyen',
+  'Mỡ (Tuyên Quang)': 'MoTuyenQuang',
+  Quế: 'Que',
+  Thông: 'Thong',
+  Tếch: 'Tech',
+  'Xoan ta (Đại Từ)': 'XoanTaDaiTu',
+  'Xoan ta (Định Hóa)': 'XoanTaDinhHoa',
 };
 
-export const data_go = [
-
-]
+export const data_go = [];

@@ -14,7 +14,7 @@ const GuideScreen = () => {
   const navigation = useNavigation();
 
   return (
-    <SafeAreaView style={styles.container2} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.container2} edges={['top']}>
       <View style={styles.wrapper}>
         {/* Header với nút Back */}
         <View style={styles.header}>
