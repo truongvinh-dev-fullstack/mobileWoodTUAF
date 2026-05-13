@@ -457,7 +457,7 @@ export const HomeScreen = () => {
             frameProcessor={frameProcessor}
             video={true}
             zoom={zoom}
-            resizeMode="contain"
+            resizeMode="cover"
             enableZoomGesture={true}
             onInitialized={onInitialized}
           />
@@ -466,13 +466,13 @@ export const HomeScreen = () => {
             <Text style={[styles.cameraText, styles.textRight]}>480x480</Text>
           </View>
           <TouchableOpacity
-            style={[styles.btnBackWrapper, { top: 10 }]}
+            style={styles.btnBackWrapper}
             onPress={() => {
               setCamera(false);
               setCanProcess(false);
             }}>
             <View style={styles.btnBack}>
-              <Ionicons name="arrow-back-outline" size={14} color="white" />
+              <Ionicons name="arrow-back-outline" size={24} color="white" />
             </View>
           </TouchableOpacity>
         </View>
