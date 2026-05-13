@@ -1,0 +1,12 @@
+diff --git a/node_modules/react-native-vision-camera/android/build.gradle b/node_modules/react-native-vision-camera/android/build.gradle
+index b1d9973..b510f2f 100644
+--- a/node_modules/react-native-vision-camera/android/build.gradle
++++ b/node_modules/react-native-vision-camera/android/build.gradle
+@@ -153,6 +153,7 @@ android {
+ 
+   externalNativeBuild {
+     cmake {
++      version "3.30.5"
+       path "CMakeLists.txt"
+     }
+   }

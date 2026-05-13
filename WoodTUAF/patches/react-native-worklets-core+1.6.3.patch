@@ -1,0 +1,12 @@
+diff --git a/node_modules/react-native-worklets-core/android/build.gradle b/node_modules/react-native-worklets-core/android/build.gradle
+index b6af1c3..1af4b4d 100644
+--- a/node_modules/react-native-worklets-core/android/build.gradle
++++ b/node_modules/react-native-worklets-core/android/build.gradle
+@@ -99,6 +99,7 @@ android {
+ 
+   externalNativeBuild {
+     cmake {
++      version "3.30.5"
+       path "CMakeLists.txt"
+     }
+   }
