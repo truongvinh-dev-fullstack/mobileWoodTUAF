@@ -21,6 +21,7 @@ import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import RenderHtml from 'react-native-render-html';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { getCachedWoodSpecies } from '../services/wood-library-service';
+import { StatusBarHeight } from '../services';
 
 const CAM_PREVIEW_WIDTH = Dimensions.get('window').width;
 
@@ -109,7 +110,12 @@ export const ResultScreen = ({ route, navigation }: any) => {
           <ActivityIndicator size="large" color="#125fa1" />
         </View>
       )}
-      <View style={{ flex: 1, backgroundColor: 'white' }}>
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: 'white',
+          paddingTop: StatusBarHeight,
+        }}>
         <ScrollView style={{ flex: 1 }}>
           <View
             style={{
@@ -210,7 +216,7 @@ export const ResultScreen = ({ route, navigation }: any) => {
           </View>
         </ScrollView>
         <TouchableOpacity
-          style={[styles.btnBackWrapper, resultStyles.backButtonOffset]}
+          style={styles.btnBackWrapper}
           onPress={() => {
             // if (data) {
             //     navigation.goBack()
@@ -220,7 +226,7 @@ export const ResultScreen = ({ route, navigation }: any) => {
             navigation.navigate('Home', { type, camera: false });
           }}>
           <View style={styles.btnBack}>
-            <Ionicons name={'arrow-back-outline'} size={15} color={'white'} />
+            <Ionicons name={'arrow-back-outline'} size={24} color={'white'} />
           </View>
         </TouchableOpacity>
         <View style={{ paddingHorizontal: 32, paddingVertical: 16 }}>
@@ -253,9 +259,6 @@ export const ResultScreen = ({ route, navigation }: any) => {
 };
 
 export const resultStyles = StyleSheet.create({
-  backButtonOffset: {
-    marginTop: 10,
-  },
   border: {
     borderWidth: 0.5,
     borderColor: 'black',
