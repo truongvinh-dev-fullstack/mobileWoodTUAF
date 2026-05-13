@@ -183,7 +183,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
     color: '#07923f',
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   emptyText: {
     color: '#66766b',

@@ -161,7 +161,7 @@ export const ResultScreen = ({ route, navigation }: any) => {
                       style={{
                         color: '#07923f',
                         fontSize: 14,
-                        fontWeight: '500',
+                        fontWeight: '700',
                         marginBottom: 10,
                         marginLeft: 3,
                       }}>
