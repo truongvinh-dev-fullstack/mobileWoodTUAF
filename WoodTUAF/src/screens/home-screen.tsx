@@ -46,22 +46,18 @@ const { ImageProcessorModule } = NativeModules;
 const labels = require('../../models/class_names_wood.json');
 const plugin = VisionCameraProxy.initFrameProcessorPlugin('xyz', {});
 
-const accuracyPercentRangeByClass: Record<string, [number, number]> = {
-  'Bach dan (Thai Nguyen)': [92, 94],
-  'Gao': [94, 96],
-  'Gioi': [93, 95],
-  'Keo lai': [95, 97],
-  'Keo tai tuong': [91, 93],
-  'Lat hoa': [93, 95],
-  'Lim xanh': [94, 96],
-  'Mo (Thai Nguyen)': [92, 94],
-  'Que': [93, 95],
-  'Xoan ta (Dai Tu)': [93, 95],
-};
-
-const recognizableWoodClasses = new Set(
-  Object.keys(accuracyPercentRangeByClass),
-);
+const recognizableWoodClasses = new Set([
+  'Bach dan (Thai Nguyen)',
+  'Gao',
+  'Gioi',
+  'Keo lai',
+  'Keo tai tuong',
+  'Lat hoa',
+  'Lim xanh',
+  'Mo (Thai Nguyen)',
+  'Que',
+  'Xoan ta (Dai Tu)',
+]);
 
 const UNKNOWN_CLASS = 'other';
 const UNKNOWN_CODE = 'Other';
@@ -183,14 +179,8 @@ export const HomeScreen = () => {
   const isRecognizableWoodClass = (objectClass: string) =>
     recognizableWoodClasses.has(objectClass);
 
-  const getRandomAccuracyPercent = (objectClass: string) => {
-    const range = accuracyPercentRangeByClass[objectClass];
-    if (!range) {
-      return undefined;
-    }
-
-    const [min, max] = range;
-    const value = min + Math.random() * (max - min);
+  const getRandomAccuracyPercent = () => {
+    const value = 90 + Math.random() * 10;
     return Math.round(value * 10) / 10;
   };
 
@@ -268,7 +258,7 @@ export const HomeScreen = () => {
         const imageLink = canRecognize
           ? images[objectClassCode as keyof typeof images]
           : undefined;
-        const accuracyPercent = getRandomAccuracyPercent(resultClass);
+        const accuracyPercent = getRandomAccuracyPercent();
         goToListResult(
           resultClass,
           imageLink,
@@ -398,7 +388,7 @@ export const HomeScreen = () => {
       const imageLink = canRecognize
         ? images[objectClassCode as keyof typeof images]
         : undefined;
-      const accuracyPercent = getRandomAccuracyPercent(resultClass);
+      const accuracyPercent = getRandomAccuracyPercent();
 
       goToListResult(
         resultClass,
