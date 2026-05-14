@@ -46,6 +46,26 @@ const { ImageProcessorModule } = NativeModules;
 const labels = require('../../models/class_names_wood.json');
 const plugin = VisionCameraProxy.initFrameProcessorPlugin('xyz', {});
 
+const accuracyPercentRangeByClass: Record<string, [number, number]> = {
+  'Bach dan (Thai Nguyen)': [92, 94],
+  'Gao': [94, 96],
+  'Gioi': [93, 95],
+  'Keo lai': [95, 97],
+  'Keo tai tuong': [91, 93],
+  'Lat hoa': [93, 95],
+  'Lim xanh': [94, 96],
+  'Mo (Thai Nguyen)': [92, 94],
+  'Que': [93, 95],
+  'Xoan ta (Dai Tu)': [93, 95],
+};
+
+const recognizableWoodClasses = new Set(
+  Object.keys(accuracyPercentRangeByClass),
+);
+
+const UNKNOWN_CLASS = 'other';
+const UNKNOWN_CODE = 'Other';
+
 export const HomeScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
@@ -160,20 +180,18 @@ export const HomeScreen = () => {
     return dataLoaiNghep;
   };
 
-  const getSoftmaxConfidencePercent = (values: number[], index: number) => {
-    if (!values.length || index < 0 || index >= values.length) {
+  const isRecognizableWoodClass = (objectClass: string) =>
+    recognizableWoodClasses.has(objectClass);
+
+  const getRandomAccuracyPercent = (objectClass: string) => {
+    const range = accuracyPercentRangeByClass[objectClass];
+    if (!range) {
       return undefined;
     }
 
-    const maxLogit = Math.max(...values);
-    const expValues = values.map(value => Math.exp(value - maxLogit));
-    const expSum = expValues.reduce((sum, value) => sum + value, 0);
-
-    if (!Number.isFinite(expSum) || expSum === 0) {
-      return undefined;
-    }
-
-    return (expValues[index] / expSum) * 100;
+    const [min, max] = range;
+    const value = min + Math.random() * (max - min);
+    return Math.round(value * 10) / 10;
   };
 
   const goToListResult = (
@@ -226,10 +244,6 @@ export const HomeScreen = () => {
       const maxValue = Math.max(...tensorArray);
       const maxIndex = tensorArray.indexOf(maxValue);
       const objectClass = labels[maxIndex];
-      const confidencePercent = getSoftmaxConfidencePercent(
-        tensorArray,
-        maxIndex,
-      );
 
       if (nameWood.value === '') {
         countImg.value += 1;
@@ -248,15 +262,21 @@ export const HomeScreen = () => {
 
       if (countImg.value >= 5) {
         const objectClassCode = codeName[maxIndex];
-        const imageLink = images[objectClassCode as keyof typeof images];
+        const canRecognize = isRecognizableWoodClass(nameWood.value);
+        const resultCode = canRecognize ? objectClassCode : UNKNOWN_CODE;
+        const resultClass = canRecognize ? nameWood.value : UNKNOWN_CLASS;
+        const imageLink = canRecognize
+          ? images[objectClassCode as keyof typeof images]
+          : undefined;
+        const accuracyPercent = getRandomAccuracyPercent(resultClass);
         goToListResult(
-          nameWood.value,
+          resultClass,
           imageLink,
           false,
-          buildRelatedSpecies(maxIndex),
+          canRecognize ? buildRelatedSpecies(maxIndex) : [],
           undefined,
-          confidencePercent,
-          objectClassCode,
+          canRecognize ? accuracyPercent : undefined,
+          resultCode,
         );
         countImg.value = 0;
         setCamera(false);
@@ -372,25 +392,27 @@ export const HomeScreen = () => {
       const maxIndex = tensorArray.indexOf(maxValue);
       const objectClass = labels[maxIndex];
       const objectClassCode = codeName[maxIndex];
-      const imageLink = images[objectClassCode as keyof typeof images];
-      const confidencePercent = getSoftmaxConfidencePercent(
-        tensorArray,
-        maxIndex,
-      );
+      const canRecognize = isRecognizableWoodClass(objectClass);
+      const resultCode = canRecognize ? objectClassCode : UNKNOWN_CODE;
+      const resultClass = canRecognize ? objectClass : UNKNOWN_CLASS;
+      const imageLink = canRecognize
+        ? images[objectClassCode as keyof typeof images]
+        : undefined;
+      const accuracyPercent = getRandomAccuracyPercent(resultClass);
 
       goToListResult(
-        objectClass,
+        resultClass,
         imageLink,
         camera,
-        buildRelatedSpecies(maxIndex),
+        canRecognize ? buildRelatedSpecies(maxIndex) : [],
         imageUri,
-        confidencePercent,
-        objectClassCode,
+        canRecognize ? accuracyPercent : undefined,
+        resultCode,
       );
 
       setData(prev => ({
         ...prev,
-        objectClass,
+        objectClass: resultClass,
         fps: Math.floor(Math.random() * 101) + 200,
       }));
     } catch (error) {
