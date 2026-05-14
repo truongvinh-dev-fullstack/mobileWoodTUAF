@@ -17,7 +17,7 @@ import { styles } from "../styles/";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 // import {idName, namkh} from "../data"
 import LinearGradient from 'react-native-linear-gradient';
-import { namkh } from '../data';
+import { namkh, tenTiengViet } from '../data';
 import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import RenderHtml from 'react-native-render-html';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -25,6 +25,19 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 const CAM_PREVIEW_WIDTH = Dimensions.get('window').width;
 
 const labels = require('../../models/class_names_wood.json');
+
+const getObjectClassDisplayName = (objectClass?: string) => {
+    if (!objectClass || objectClass.toLocaleLowerCase() == 'other') {
+        return "Không nhận dạng được";
+    }
+
+    const index = labels.findIndex((x: string) => x.toLocaleLowerCase() == objectClass.toLocaleLowerCase());
+    if (index == -1) {
+        return objectClass;
+    }
+
+    return tenTiengViet[index] || objectClass;
+};
 
 export const ResultScreen = ({ route, navigation }) => {
     const { objectClass, path, imageWidth, imageHeight, boolean, data, type } = route.params;
@@ -132,7 +145,7 @@ export const ResultScreen = ({ route, navigation }) => {
                                         : null} */}
                                 </View> :
                                 <View style={{ flex: 1, justifyContent: 'flex-start', width: '100%', zIndex: 999 }}>
-                                    <Text style={{ color: 'black', fontSize: 18, fontWeight: '500', marginTop: 16, marginLeft: 8 }}>{objectClass && objectClass != "other" ? objectClass : "Không nhận dạng được"}</Text>
+                                    <Text style={{ color: 'black', fontSize: 18, fontWeight: '500', marginTop: 16, marginLeft: 8 }}>{getObjectClassDisplayName(objectClass)}</Text>
                                 </View>
                             // <View style={{flex: 1, justifyContent: 'flex-start', width: '100%', zIndex: 999}}>
                             //     {!loading ?

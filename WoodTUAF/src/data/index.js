@@ -19,44 +19,6 @@ export const codeName = [
   'Other',
 ];
 
-// export const namkh = [
-//   "Urophylla x grandis (LS)",
-//   "Urophylla (TN)",
-//   "Nauclea orientalis (TN)",
-//   "Michelia tonkinensis (TN)",
-//   "Acacia hybrid (TN)",
-//   "Acacia mangium (TN)",
-//   "Chukrasia tabularis (TN)",
-//   "Erythrophleum fordii (TN)",
-//   "Manglietia conifera (TN)",
-//   "Manglietia conifera (TQ)",
-//   "Cinnamomum cassia (TN)",
-//   "Tectona grandis (TN)",
-//   "Pinus massoniana (TN)",
-//   "Melia azedarach (ĐT_TN)",
-//   "Melia azedarach (ĐH_TN)",
-//   "Other",
-// ];
-
-// export const namkh = [
-//   "E. urophylla x E. Grandis (Lạng Sơn)",
-//   "Eucalyptus urophylla",
-//   "Nauclea orientalis",
-//   "Michelia tonkinensis",
-//   "Acacia hybrid",
-//   "Acacia mangium",
-//   "Chukrasia tabularis",
-//   "Erythrophleum fordii",
-//   "Manglietia conifera",
-//   "Manglietia conifera (Tuyên Quang)",
-//   "Cinnamomum cassia",
-//   "Tectona grandis (Sơn La)",
-//   "Pinus massoniana Lamb. (Cao Bằng)",
-//   "Melia azedarach Linn",
-//   "Melia azedarach Linn (Thái Nguyên)",
-//   "Other",
-// ];
-
 export const namkh = [
   "E. urophylla x E. grandis",
   "Eucalyptus Urophylla",
@@ -74,6 +36,25 @@ export const namkh = [
   "Melia azedarach",
   "Melia azedarach Linn",
   "Other",
+];
+
+export const tenTiengViet = [
+  "Bạch đàn (Lạng Sơn)",
+  "Bạch đàn (Thái Nguyên)",
+  "Gáo",
+  "Giổi",
+  "Keo lai",
+  "Keo tai tượng",
+  "Lát hoa",
+  "Lim xanh",
+  "Mỡ (Thái Nguyên)",
+  "Mỡ (Tuyên Quang)",
+  "Quế",
+  "Tếch",
+  "Thông",
+  "Xoan ta (Đại Từ)",
+  "Xoan ta (Định Hóa)",
+  "Không nhận dạng được",
 ];
 
 
