@@ -4,10 +4,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Linking,
   NativeModules,
-  PermissionsAndroid,
-  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -301,54 +298,7 @@ export const HomeScreen = () => {
     [canProcess],
   );
 
-  const requestPhotoPermissionAndroid = async () => {
-    if (Platform.OS !== 'android') {
-      return true;
-    }
-    try {
-      if (Platform.Version >= 33) {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
-          {
-            title: 'Cấp quyền truy cập ảnh',
-            message: 'Ứng dụng cần quyền đọc ảnh để mở thư viện.',
-            buttonNegative: 'Từ chối',
-            buttonPositive: 'Đồng ý',
-          },
-        );
-        return granted === PermissionsAndroid.RESULTS.GRANTED;
-      }
-
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-        {
-          title: 'Cấp quyền truy cập ảnh',
-          message: 'Ứng dụng cần quyền đọc ảnh để mở thư viện.',
-          buttonNegative: 'Từ chối',
-          buttonPositive: 'Đồng ý',
-        },
-      );
-      return granted === PermissionsAndroid.RESULTS.GRANTED;
-    } catch (e) {
-      console.error('requestPhotoPermissionAndroid error:', e);
-      return false;
-    }
-  };
-
   const onLaunchImage = async () => {
-    const hasPermission = await requestPhotoPermissionAndroid();
-    if (!hasPermission) {
-      Alert.alert(
-        'Thiếu quyền truy cập ảnh',
-        'Vui lòng cấp quyền trong Cài đặt để chọn ảnh.',
-        [
-          { text: 'Đóng', style: 'cancel' },
-          { text: 'Mở cài đặt', onPress: () => Linking.openSettings() },
-        ],
-      );
-      return;
-    }
-
     const options: ImageLibraryOptions = {
       mediaType: 'photo',
       quality: 1,
